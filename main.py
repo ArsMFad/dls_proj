@@ -8,11 +8,11 @@ import torchvision.models as models
 import copy
 
 import Vgg16
-import matplotlib.pyplot as plt
 import StyleTransfer as s_trans
 
 from PIL import Image
 import PIL
+
 
 #work_model = Vgg16()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
