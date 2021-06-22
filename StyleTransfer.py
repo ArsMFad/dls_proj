@@ -12,7 +12,7 @@ from PIL import Image
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-imsize = 512
+imsize = 256
 
 loader = transforms.Compose([
     transforms.Resize(imsize),
@@ -74,7 +74,6 @@ class Normalization(nn.Module):
         self.std = torch.tensor(std).view(-1, 1, 1)
 
     def forward(self, img):
-        # normalize img
         return (img - self.mean) / self.std
 
 
@@ -139,7 +138,7 @@ def get_input_optimizer(input_img):
 
 
 def run_style_transfer(cnn, normalization_mean, normalization_std,
-                       content_img, style_img, input_img, num_steps=500,
+                       content_img, style_img, input_img, num_steps=100,
                        style_weight=100000, content_weight=1):
     """Run the style transfer."""
     print('Building the style transfer model..')
