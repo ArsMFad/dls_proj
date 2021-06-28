@@ -9,10 +9,15 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 
 from aiogram.utils import executor
+from aiogram.utils.executor import start_webhook
+
 
 from config import TOKEN
 
 import main
+import asyncio
+import threading
+import ml_maker
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot, storage=MemoryStorage())
@@ -25,21 +30,19 @@ class ImgStates(StatesGroup):
     waiting_for_intensivity = State()
 
 
+@dp.message_handler(commands=['start'])
 async def cmd_start(message: types.Message):
     await message.answer("Hola Amigo!")
 
 
+@dp.message_handler(commands=['cancel'], state="*")
 async def cmd_cancel(message: types.Message, state: FSMContext):
+    print("cancel")
     await state.finish()
     await message.answer("Действие отменено")
 
 
-@dp.message_handler(commands=['get_state'])
-async def get_state(message: types.Message):
-    await message.answer(dp.current_state)
-
-
-@dp.message_handler(commands=['style_img'])
+@dp.message_handler(commands=['style_img'], state="*")
 async def load_content(message: types.Message):
     await ImgStates.waiting_for_content.set()
     await message.answer("Give me content")
@@ -47,9 +50,6 @@ async def load_content(message: types.Message):
 
 @dp.message_handler(state=ImgStates.waiting_for_content, content_types=['document'])
 async def content_loaded(message: types.Message, state: FSMContext):
-    print(message.document)
-    #await message.document[-1].download('cont' + str(message.from_user.id) + ".jpg")
-    #await state.update_data(content_img=message.photo[-1])
     file_id = message.document.file_id
     file = await bot.get_file(file_id)
     file_path = file.file_path
@@ -62,8 +62,6 @@ async def content_loaded(message: types.Message, state: FSMContext):
 
 @dp.message_handler(state=ImgStates.waiting_for_style, content_types=['document'])
 async def style_loaded(message: types.Message, state: FSMContext):
-    #await message.document[-1].download('style' + str(message.from_user.id) + ".jpg")
-    #await state.update_data(style_img=message.photo[-1])
     file_id = message.document.file_id
     file = await bot.get_file(file_id)
     file_path = file.file_path
@@ -91,10 +89,22 @@ async def intensivity_loaded(message: types.Message, state: FSMContext):
     user_data = await state.get_data()
     await message.answer(user_data)
     await state.finish()
-    await main.return_result(user_data["content_img"], user_data["style_img"], message.from_user.id)
+    await message.answer("Wait")
+    t = threading.Thread(
+        target=lambda message, content_img, style_img, quality:
+        asyncio.run(process_nst(message, content_img, style_img, quality)),
+        args=(message, user_data["content_img"], user_data["style_img"], user_data["quality"]))
+    t.start()
+
+
+async def process_nst(message, content_img, style_img, quality):
+    main.return_result(content_img, style_img, message.from_user.id, quality)
     file = InputFile(str(message.from_user.id) + "result.jpg")
-    await message.answer("Готово!")
-    await message.answer_document(file)
+    bot1 = Bot(token=TOKEN)
+    await bot1.send_message(message.chat.id, "Готово!")
+    await bot1.send_photo(message.chat.id, photo=file)
+    await bot1.close_bot()
+
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)

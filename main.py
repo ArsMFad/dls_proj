@@ -14,16 +14,20 @@ from PIL import Image
 import PIL
 
 
-#work_model = Vgg16()
-async def return_result(cont_img_path, style_img_path, usr_name):
+def return_result(cont_img_path, style_img_path, usr_name, quality):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     work_model = models.vgg19(pretrained=True).features.to(device).eval()
 
     content_img = s_trans.image_loader(cont_img_path)
     style_img = s_trans.image_loader(style_img_path)
 
+    quality = int(quality)
+    if quality < 0 or quality > 10:
+        quality = 5
+    quality *= 100
+
     output = s_trans.run_style_transfer(work_model, s_trans.cnn_normalization_mean,
-                                        s_trans.cnn_normalization_std, content_img, style_img, content_img)
+                                        s_trans.cnn_normalization_std, content_img, style_img, content_img, quality)
     unloader = transforms.ToPILImage()
     output = output.cpu().clone()
     output = output.squeeze(0)
