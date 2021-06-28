@@ -15,8 +15,15 @@ import PIL
 
 
 def return_result(cont_img_path, style_img_path, usr_name, quality):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    work_model = models.vgg19(pretrained=True).features.to(device).eval()
+    device = torch.device("cpu")
+    work_model = models.vgg19(pretrained=True)
+    num_ftrs = work_model.classifier[6].in_features
+    work_model.classifier[6] = nn.Linear(num_ftrs, 2)
+
+    work_model.load_state_dict(torch.load('modelka(1)', map_location=device))
+    work_model = work_model.features.to(device).eval()
+    print(work_model)
+
 
     content_img = s_trans.image_loader(cont_img_path)
     style_img = s_trans.image_loader(style_img_path)
@@ -33,3 +40,5 @@ def return_result(cont_img_path, style_img_path, usr_name, quality):
     output = output.squeeze(0)
     output = unloader(output)
     output = output.save(str(usr_name) + "result.jpg")
+
+return_result("cont339492786.jpg", "style339492786.jpg", "alexei", 1)
