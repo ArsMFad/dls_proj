@@ -17,7 +17,6 @@ from config import TOKEN
 import main
 import asyncio
 import threading
-import ml_maker
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot, storage=MemoryStorage())
@@ -27,7 +26,6 @@ class ImgStates(StatesGroup):
     waiting_for_content = State()
     waiting_for_style = State()
     waiting_for_quality = State()
-    waiting_for_intensivity = State()
 
 
 @dp.message_handler(commands=['start'])
@@ -77,15 +75,6 @@ async def quality_loaded(message: types.Message, state: FSMContext):
     await message.answer(message.text)
     await state.update_data(quality=message.text)
     await message.answer("Quality got")
-    await ImgStates.waiting_for_intensivity.set()
-    await message.answer("Give me intensivity")
-
-
-@dp.message_handler(state=ImgStates.waiting_for_intensivity)
-async def intensivity_loaded(message: types.Message, state: FSMContext):
-    await message.answer(message.text)
-    await state.update_data(intensivity=message.text)
-    await message.answer("Intensivity got")
     user_data = await state.get_data()
     await message.answer(user_data)
     await state.finish()
