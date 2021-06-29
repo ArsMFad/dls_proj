@@ -15,7 +15,7 @@ import PIL
 
 
 def return_result(cont_img_path, style_img_path, usr_name, quality, model_choose):
-    device = torch.device("cpu")
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     daub_model = models.vgg19_bn(pretrained=True)
     num_ftrs = daub_model.classifier[6].in_features

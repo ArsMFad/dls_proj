@@ -107,7 +107,7 @@ async def quality_loaded(message: types.Message, state: FSMContext):
     await message.answer(message.text)
     if message.text == ("Low (fast)"):
         await state.update_data(quality=1)
-    elif message.text == ("Low (fast)"):
+    elif message.text == ("Not low (not fast)"):
         await state.update_data(quality=2)
     else:
         await state.update_data(quality=3)
