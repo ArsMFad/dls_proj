@@ -16,20 +16,18 @@ import PIL
 
 def return_result(cont_img_path, style_img_path, usr_name, quality, model_choose):
     device = torch.device("cpu")
-    alexnet_model = models.alexnet(pretrained=True)
-    num_ftrs = alexnet_model.classifier[6].in_features
-    alexnet_model.classifier[6] = nn.Linear(num_ftrs, 2)
-    alexnet_model.load_state_dict(torch.load('modelka_alexnet', map_location=device))
-    alexnet_model = alexnet_model.features.to(device).eval()
 
-    vgg_model = models.vgg19_bn(pretrained=True)
-    num_ftrs = vgg_model.classifier[6].in_features
-    vgg_model.classifier[6] = nn.Linear(num_ftrs, 2)
-    vgg_model.load_state_dict(torch.load('modelka_vgg', map_location=device))
-    vgg_model = vgg_model.features.to(device).eval()
+    daub_model = models.vgg19_bn(pretrained=True)
+    num_ftrs = daub_model.classifier[6].in_features
+    daub_model.classifier[6] = nn.Linear(num_ftrs, 2)
+    daub_model.load_state_dict(torch.load('modelka_vgg', map_location=device))
+    daub_model = daub_model.features.to(device).eval()
+
+
+    vgg_model = models.vgg19_bn(pretrained=True).features.to(device).eval()
 
     if model_choose == "0":
-        work_model = alexnet_model
+        work_model = daub_model
     else:
         work_model = vgg_model
 
@@ -37,13 +35,8 @@ def return_result(cont_img_path, style_img_path, usr_name, quality, model_choose
     style_img = s_trans.image_loader(style_img_path)
 
     quality = int(quality)
-    if model_choose == "0":
-        quality *= 10
-        if quality < 0 or quality > 30:
-            quality = 20
-    else:
-        if quality < 0 or quality > 3:
-            quality = 2
+    if quality < 0 or quality > 3:
+        quality = 2
     quality *= 100
 
     output = s_trans.run_style_transfer(work_model, s_trans.cnn_normalization_mean,

@@ -9,11 +9,10 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 
 from aiogram.utils import executor
-from aiogram.utils.executor import start_webhook
-
 
 from config import TOKEN
 
+import os
 import main
 import asyncio
 import threading
@@ -96,7 +95,6 @@ async def style_loaded(message: types.Message, state: FSMContext):
     else:
         await state.update_data(model_choose="1")
         model_choose = "1"
-    await message.answer("Type selected" + model_choose)
     await ImgStates.waiting_for_quality.set()
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
     buttons = ["Low (fast)", "Not low (not fast)", "High (slow)"]
@@ -129,12 +127,15 @@ async def process_nst(message, content_img, style_img, quality, model_choose):
     main.return_result(content_img, style_img, message.from_user.id, quality, model_choose)
     file = InputFile(str(message.from_user.id) + "result.jpg")
     bot1 = Bot(token=TOKEN)
-    await bot1.send_photo(message.chat.id, photo=file)
-    await bot1.close_bot()
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
     buttons = ["StyleTransfer", "Help"]
     keyboard.add(*buttons)
-    await message.answer("Готово!", reply_markup=keyboard)
+    await bot1.send_photo(message.chat.id, photo=file)
+    await bot1.send_message(message.chat.id, "Готово!", reply_markup=keyboard)
+    os.remove(content_img)
+    os.remove(style_img)
+    os.remove(str(message.from_user.id) + "result.jpg")
+    await bot1.close_bot()
 
 
 if __name__ == '__main__':

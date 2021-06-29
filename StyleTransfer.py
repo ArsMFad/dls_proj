@@ -93,7 +93,6 @@ def get_style_model_and_losses(cnn, normalization_mean, normalization_std,
 
     i = 0
     for layer in cnn.children():
-        print(layer)
         if isinstance(layer, nn.Conv2d):
             i += 1
             name = 'conv_{}'.format(i)
